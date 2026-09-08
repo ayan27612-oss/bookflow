@@ -187,6 +187,7 @@ const SUPABASE_URL =
   BOOKFLOW ADMIN USES THE LEGACY SUPABASE ANON KEY.
   This is safe for browser-side use.
 */
+
 const SUPABASE_PUBLISHABLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjcnVmc3VmbXBjbGZrcHZya2FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NTc3MTcsImV4cCI6MjEwNDQzMzcxN30.BNyRuCxY2BQL4iJXeHBWtOB8ZktALxFKLCB5CYiaP0U";
 
@@ -296,7 +297,7 @@ function escapeHTML(value){
   return String(
     value ?? ""
   ).replace(
-    /[&<>"']/g,
+    /[&<>\"']/g,
     m => ({
       "&":"&amp;",
       "<":"&lt;",
