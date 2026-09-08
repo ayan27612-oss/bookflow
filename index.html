@@ -1496,6 +1496,9 @@ img{
 
 @media(max-width:560px){
 
+  /* Mobile booking comfort: keep the existing design,
+     but make the booking flow easier to read, reach and scroll. */
+
   .nav-inner{
     width:calc(100% - 28px);
   }
@@ -1599,16 +1602,122 @@ img{
   }
 
   .modal{
+    align-items:flex-start;
     padding:10px;
+    padding-top:max(10px,env(safe-area-inset-top));
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
   }
 
   .modal-card{
+    width:100%;
     max-height:94vh;
-    border-radius:20px;
+    max-height:calc(100dvh - 16px);
+    border-radius:18px;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+
+  .modal-header{
+    padding:18px 17px;
+    position:sticky;
+    top:0;
+    z-index:2;
+    background:#111317;
+  }
+
+  .modal-header h3{
+    font-size:22px;
+    line-height:1.15;
+    max-width:calc(100% - 48px);
+  }
+
+  .close{
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
   }
 
   .modal-content{
-    padding:19px;
+    padding:17px 17px 24px;
+  }
+
+  .selected-service{
+    padding:14px;
+    margin-bottom:19px;
+  }
+
+  .date-grid{
+    gap:7px;
+    margin-bottom:19px;
+  }
+
+  .date-btn{
+    min-height:50px;
+    padding:10px 4px;
+  }
+
+  .time-grid{
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+    margin-bottom:20px;
+  }
+
+  .time-btn{
+    min-height:50px;
+    padding:10px 7px;
+  }
+
+  .input{
+    min-height:46px;
+    padding:13px;
+    font-size:16px;
+  }
+
+  .form-actions{
+    gap:8px;
+    margin-top:18px;
+    padding-bottom:max(2px,env(safe-area-inset-bottom));
+  }
+
+  .form-actions .btn{
+    min-height:50px;
+  }
+
+  .success-screen{
+    padding:22px 2px 16px;
+  }
+
+  .success-icon{
+    width:64px;
+    height:64px;
+    margin-bottom:17px;
+    font-size:26px;
+  }
+
+  .success-screen h3{
+    font-size:30px;
+    line-height:1.15;
+  }
+
+  .success-screen p{
+    font-size:13px;
+    line-height:1.6;
+  }
+
+  .booking-summary{
+    margin:19px 0;
+    padding:14px;
+  }
+
+  .summary-line{
+    gap:12px;
+    padding:10px 0;
+  }
+
+  .summary-line strong{
+    max-width:62%;
+    text-align:right;
+    overflow-wrap:anywhere;
   }
 
 }
@@ -4614,6 +4723,17 @@ function goStep(
       "active"
     );
 
+    const modalCard =
+      document.querySelector(
+        ".modal-card"
+      );
+
+    if(modalCard){
+
+      modalCard.scrollTop = 0;
+
+    }
+
   }
 
 }
@@ -5007,6 +5127,18 @@ async function confirmBooking(){
       .classList.add(
         "active"
       );
+
+
+    const modalCard =
+      document.querySelector(
+        ".modal-card"
+      );
+
+    if(modalCard){
+
+      modalCard.scrollTop = 0;
+
+    }
 
 
     showToast(
