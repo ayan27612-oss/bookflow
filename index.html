@@ -1231,21 +1231,6 @@ img{
   border-color:rgba(216,184,120,.5);
 }
 
-.time-btn:disabled{
-  cursor:not-allowed;
-  opacity:.35;
-  color:#555a61;
-  background:#0a0c0f;
-  border-color:rgba(255,255,255,.05);
-  text-decoration:line-through;
-}
-
-.time-btn:disabled:hover{
-  background:#0a0c0f;
-  color:#555a61;
-  border-color:rgba(255,255,255,.05);
-}
-
 .form-grid{
   display:grid;
   gap:12px;
@@ -3242,9 +3227,72 @@ img{
         </div>
 
 
-        <div
-          class="time-grid"
-          id="timeGrid">
+        <div class="time-grid">
+
+          <button
+            class="time-btn selected"
+            onclick="selectTime(this,'10:00 AM')">
+
+            10:00 AM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'11:30 AM')">
+
+            11:30 AM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'01:00 PM')">
+
+            01:00 PM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'02:30 PM')">
+
+            02:30 PM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'04:00 PM')">
+
+            04:00 PM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'05:30 PM')">
+
+            05:30 PM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'07:00 PM')">
+
+            07:00 PM
+
+          </button>
+
+          <button
+            class="time-btn"
+            onclick="selectTime(this,'08:30 PM')">
+
+            08:30 PM
+
+          </button>
+
         </div>
 
 
@@ -3556,9 +3604,9 @@ const booking = {
 
   dateISO:"",
 
-  time:"",
+  time:"10:00 AM",
 
-  timeISO:""
+  timeISO:"10:00:00"
 
 };
 
@@ -3566,12 +3614,6 @@ const booking = {
 let business = null;
 
 let services = [];
-
-let businessHours = [];
-
-let bookingSettings = null;
-
-let bookedSlots = [];
 
 let bookingSubmitting = false;
 
@@ -3667,18 +3709,14 @@ async function initializeSupabase(){
   try{
 
     await loadBusiness();
+
     await loadServices();
-    await loadBusinessHours();
-    await loadBookingSettings();
+
     renderServices();
 
     renderModalServices();
 
     updateBookingDates();
-
-    await renderAvailableTimeSlots(
-      booking.dateISO
-    );
 
     console.log(
       "BOOKFLOW database connection ready."
@@ -3827,81 +3865,6 @@ async function loadServices(){
     "Services loaded:",
     services
   );
-
-}
-
-
-/* =========================================================
-   LOAD BUSINESS HOURS
-========================================================= */
-
-async function loadBusinessHours(){
-
-  if(!booking.businessId){
-    throw new Error(
-      "Business ID is missing."
-    );
-  }
-
-  const result =
-    await supabaseClient
-      .from("business_hours")
-      .select("*")
-      .eq(
-        "business_id",
-        booking.businessId
-      )
-      .order(
-        "day_of_week",
-        {ascending:true}
-      );
-
-  if(result.error){
-    console.error(
-      "Business hours query error:",
-      result.error
-    );
-    throw result.error;
-  }
-
-  businessHours =
-    result.data || [];
-
-}
-
-
-/* =========================================================
-   LOAD BOOKING SETTINGS
-========================================================= */
-
-async function loadBookingSettings(){
-
-  if(!booking.businessId){
-    throw new Error(
-      "Business ID is missing."
-    );
-  }
-
-  const result =
-    await supabaseClient
-      .from("booking_settings")
-      .select("*")
-      .eq(
-        "business_id",
-        booking.businessId
-      )
-      .maybeSingle();
-
-  if(result.error){
-    console.error(
-      "Booking settings query error:",
-      result.error
-    );
-    throw result.error;
-  }
-
-  bookingSettings =
-    result.data || null;
 
 }
 
@@ -4117,14 +4080,6 @@ function selectDatabaseService(service){
   updateBookingServiceUI();
 
   goStep(2);
-
-  renderAvailableTimeSlots(
-    booking.dateISO
-  );
-
-  renderAvailableTimeSlots(
-    booking.dateISO
-  );
 
 }
 
@@ -4568,294 +4523,6 @@ function selectDate(
       date
     );
 
-  booking.time = "";
-  booking.timeISO = "";
-
-  renderAvailableTimeSlots(
-    booking.dateISO
-  );
-
-}
-
-
-/* =========================================================
-   SMART AVAILABILITY
-========================================================= */
-
-function timeToMinutes(time){
-
-  if(!time){
-    return 0;
-  }
-
-  const parts =
-    time.split(":");
-
-  return (
-    Number(parts[0]) * 60 +
-    Number(parts[1] || 0)
-  );
-
-}
-
-
-function minutesToTime(minutes){
-
-  const hour24 =
-    Math.floor(minutes / 60) % 24;
-
-  const minute =
-    minutes % 60;
-
-  const period =
-    hour24 >= 12 ? "PM" : "AM";
-
-  const hour12 =
-    hour24 % 12 || 12;
-
-  return (
-    String(hour12).padStart(2,"0") +
-    ":" +
-    String(minute).padStart(2,"0") +
-    " " +
-    period
-  );
-
-}
-
-
-function getBusinessHoursForDate(dateISO){
-
-  if(!dateISO){
-    return null;
-  }
-
-  const dayOfWeek =
-    new Date(
-      dateISO + "T00:00:00"
-    ).getDay();
-
-  return (
-    businessHours.find(
-      function(item){
-        return Number(item.day_of_week) === dayOfWeek;
-      }
-    ) || null
-  );
-
-}
-
-
-function isSlotOverlappingBooked(
-  startMinutes,
-  endMinutes
-){
-
-  return bookedSlots.some(
-    function(item){
-
-      const bookedStart =
-        timeToMinutes(
-          String(item.booking_time || "").slice(0,5)
-        );
-
-      const bookedDuration =
-        Number(
-          item.duration_minutes || 0
-        );
-
-      const bookedEnd =
-        bookedStart + bookedDuration;
-
-      return (
-        startMinutes < bookedEnd &&
-        endMinutes > bookedStart
-      );
-
-    }
-  );
-
-}
-
-
-async function loadBookedSlots(dateISO){
-
-  bookedSlots = [];
-
-  if(
-    !supabaseClient ||
-    !booking.businessId ||
-    !dateISO
-  ){
-    return;
-  }
-
-  const result =
-    await supabaseClient.rpc(
-      "get_booked_slots",
-      {
-        p_business_id:
-          booking.businessId,
-        p_booking_date:
-          dateISO
-      }
-    );
-
-  if(result.error){
-    console.error(
-      "Availability query error:",
-      result.error
-    );
-    throw result.error;
-  }
-
-  bookedSlots =
-    result.data || [];
-
-}
-
-
-async function renderAvailableTimeSlots(dateISO){
-
-  const grid =
-    document.getElementById(
-      "timeGrid"
-    );
-
-  if(!grid){
-    return;
-  }
-
-  grid.innerHTML = "";
-  booking.time = "";
-  booking.timeISO = "";
-
-  const hours =
-    getBusinessHoursForDate(
-      dateISO
-    );
-
-  if(!hours || !hours.is_open){
-    grid.innerHTML =
-      '<div style="grid-column:1/-1;color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">Closed on this day.</div>';
-    return;
-  }
-
-  const opening =
-    timeToMinutes(
-      String(hours.opening_time).slice(0,5)
-    );
-
-  const closing =
-    timeToMinutes(
-      String(hours.closing_time).slice(0,5)
-    );
-
-  const interval =
-    Math.max(
-      5,
-      Number(
-        bookingSettings &&
-        bookingSettings.slot_interval_minutes
-      ) || 30
-    );
-
-  const duration =
-    Math.max(
-      1,
-      Number(booking.duration) || 1
-    );
-
-  const noticeHours =
-    Math.max(
-      0,
-      Number(
-        bookingSettings &&
-        bookingSettings.minimum_notice_hours
-      ) || 0
-    );
-
-  const allowSameDay =
-    bookingSettings
-      ? bookingSettings.allow_same_day_booking !== false
-      : true;
-
-  if(
-    !allowSameDay &&
-    dateISO === formatISODate(new Date())
-  ){
-    grid.innerHTML =
-      '<div style="grid-column:1/-1;color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">Same-day booking is unavailable.</div>';
-    return;
-  }
-
-  try{
-    await loadBookedSlots(
-      dateISO
-    );
-  }catch(error){
-    grid.innerHTML =
-      '<div style="grid-column:1/-1;color:var(--danger);font-size:12px;padding:12px 0;text-align:center;">Availability could not be loaded. Please try again.</div>';
-    return;
-  }
-
-  const now = new Date();
-  const minimumStart =
-    dateISO === formatISODate(now)
-      ? now.getHours() * 60 +
-        now.getMinutes() +
-        noticeHours * 60
-      : -1;
-
-  let availableCount = 0;
-
-  for(
-    let start = opening;
-    start + duration <= closing;
-    start += interval
-  ){
-
-    const end = start + duration;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "time-btn";
-
-    const displayTime = minutesToTime(start);
-    button.textContent = displayTime;
-
-    const unavailable =
-      start < minimumStart ||
-      isSlotOverlappingBooked(start,end);
-
-    if(unavailable){
-      button.disabled = true;
-      button.setAttribute("aria-disabled","true");
-      button.title = "This time is unavailable";
-    }else{
-      button.addEventListener(
-        "click",
-        function(){
-          selectTime(button,displayTime);
-        }
-      );
-
-      if(availableCount === 0){
-        button.classList.add("selected");
-        booking.time = displayTime;
-        booking.timeISO = convertTimeToPostgres(displayTime);
-      }
-
-      availableCount++;
-    }
-
-    grid.appendChild(button);
-  }
-
-  if(!availableCount){
-    grid.innerHTML =
-      '<div style="grid-column:1/-1;color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">No appointment times are available for this date.</div>';
-  }
-
 }
 
 
@@ -5268,56 +4935,6 @@ async function confirmBooking(){
 
 
   /* ---------------------------------------------
-     FINAL AVAILABILITY CHECK
-  --------------------------------------------- */
-
-  try{
-    await loadBookedSlots(
-      booking.dateISO
-    );
-
-    const selectedStart =
-      timeToMinutes(
-        booking.timeISO.slice(0,5)
-      );
-
-    const selectedEnd =
-      selectedStart +
-      Number(booking.duration || 0);
-
-    if(
-      isSlotOverlappingBooked(
-        selectedStart,
-        selectedEnd
-      )
-    ){
-      showToast(
-        "That time was just booked. Please choose another slot."
-      );
-
-      await renderAvailableTimeSlots(
-        booking.dateISO
-      );
-
-      return;
-    }
-
-  }catch(error){
-
-    console.error(
-      "Final availability check failed:",
-      error
-    );
-
-    showToast(
-      "Could not verify availability. Please try again."
-    );
-
-    return;
-  }
-
-
-  /* ---------------------------------------------
      LOCK BUTTON
   --------------------------------------------- */
 
@@ -5569,18 +5186,11 @@ async function confirmBooking(){
     else if(
       errorText.includes(
         "duplicate"
-      ) ||
-      errorText.includes(
-        "bookings_business_date_time_unique"
       )
     ){
 
       message =
-        "That time was just booked. Please choose another slot.";
-
-      await renderAvailableTimeSlots(
-        booking.dateISO
-      );
+        "This appointment may already exist.";
 
     }
 
@@ -5746,16 +5356,41 @@ function resetBooking(){
 
 
   /*
-    Rebuild availability for the selected date.
+    Re-select first time.
   */
 
-  booking.time = "";
+  const times =
+    document.querySelectorAll(
+      ".time-btn"
+    );
 
-  booking.timeISO = "";
 
-  renderAvailableTimeSlots(
-    booking.dateISO
+  times.forEach(
+    function(button,index){
+
+      button.classList.toggle(
+        "selected",
+        index === 0
+      );
+
+    }
   );
+
+
+  if(times.length){
+
+    booking.time =
+      times[0]
+        .textContent
+        .trim();
+
+
+    booking.timeISO =
+      convertTimeToPostgres(
+        booking.time
+      );
+
+  }
 
 
   document.getElementById(
